@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, TextInput, TouchableOpacity, Text, StyleSheet, Image, ImageBackground } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import MapView, { Marker } from 'react-native-maps';
+import MapView, { Marker} from 'react-native-maps';
 
 
 const Stack = createStackNavigator();
@@ -118,32 +118,31 @@ function RegistrationPage({ navigation }) {
 
 function MapPage() {
   return (
-    <View style={styles.container}>
-      <MapView
-          style={styles.map}
+      <View style={{ flex: 1 }}>
+        <MapView
+          style={{ flex: 1 }}
           provider={MapView.PROVIDER_GOOGLE}
           providerOptions={{
-            apiKey: 'AIzaSyAyaY4JRjDrLbSdbyCmD-RHXLypnNNDAdk',
+            apiKey: "AIzaSyCmU2tQ-70xFcJnqewgxA5sK0k3HHXxvy8",
           }}
-        initialRegion={{
-          latitude: 37.78825,
-          longitude: -122.4324,
-          latitudeDelta: 0.0922,
-          longitudeDelta: 0.0421,
-        }}
-      >
-        <Marker
-          coordinate={{
-            latitude: 37.78825,
-            longitude: -122.4324,
+          
+          initialRegion={{
+            latitude: 48.87548552467971,
+            longitude: 2.410712894024804,
           }}
-          title="Marker"
-          description="Marker Description"
-        />
-      </MapView>
-    </View>
-  );
-}
+        >
+          <Marker
+            coordinate={{
+              latitude: 48.87548552467971,
+              longitude: 2.410712894024804,
+            }}
+            title="Marker"
+            description="Marker Description"
+          />
+        </MapView>
+      </View>
+    );
+  }
 
 const styles = StyleSheet.create({
   container: {
@@ -153,7 +152,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
     padding: 16,
   },
-
+ 
   header: {
     alignItems: 'center',
     marginBottom: 24,
