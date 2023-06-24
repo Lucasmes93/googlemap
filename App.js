@@ -331,11 +331,6 @@ const styles = StyleSheet.create({
     width: '100%',
   }, 
 
-  buttonContainerSearch: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    width: '100%',
-  }, 
   button: {
     width: '48%',
     height: 48,
@@ -363,7 +358,5 @@ const styles = StyleSheet.create({
     marginTop: 10,
     textAlign: 'center',
   },
-  map: {
-    flex: 1,
-  },
+
 });
