@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { View, TextInput, TouchableOpacity, Text, StyleSheet, Image, ImageBackground } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import MapView, { Marker} from 'react-native-maps';
+import MapView, { Marker, Polyline} from 'react-native-maps';
+import Geocoder from 'react-native-geocoding';
 
+Geocoder.init("AIzaSyCmU2tQ-70xFcJnqewgxA5sK0k3HHXxvy8");
 
 const Stack = createStackNavigator();
 
@@ -106,7 +108,7 @@ function RegistrationPage({ navigation }) {
         secureTextEntry
         onChangeText={text => setPassword(text)}
       />
-      <View style={styles.buttonContainerInscription}>
+      <View style={styles.buttonContainerSolo}>
         <TouchableOpacity style={styles.button} onPress={handleRegistration}>
           <Text style={styles.buttonText}>S'inscrire</Text> 
         </TouchableOpacity>
@@ -117,32 +119,159 @@ function RegistrationPage({ navigation }) {
 }
 
 function MapPage() {
+  const [startAddress, setStartAddress] = useState('');
+  const [endAddress, setEndAddress] = useState('');
+  const [startCoordinates, setStartCoordinates] = useState(null);
+  const [endCoordinates, setEndCoordinates] = useState(null);
+  const [coordinates, setCoordinates] = useState([]);
+  const [travelTime, setTravelTime] = useState(null);
+
+  const handleStartAddressChange = (address) => {
+    setStartAddress(address);
+  };
+
+  const handleEndAddressChange = (address) => {
+    setEndAddress(address);
+  };
+
+  const handleGeocode = async () => {
+    try {
+      const startResponse = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
+          startAddress
+        )}&key=AIzaSyCmU2tQ-70xFcJnqewgxA5sK0k3HHXxvy8`
+      );
+      const startData = await startResponse.json();
+
+      if (startData.status === 'OK') {
+        const startLocation = startData.results[0].geometry.location;
+        const startCoords = {
+          latitude: startLocation.lat,
+          longitude: startLocation.lng,
+        };
+        setStartCoordinates(startCoords);
+
+        const endResponse = await fetch(
+          `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
+            endAddress
+          )}&key=AIzaSyCmU2tQ-70xFcJnqewgxA5sK0k3HHXxvy8`
+        );
+        const endData = await endResponse.json();
+
+        if (endData.status === 'OK') {
+          const endLocation = endData.results[0].geometry.location;
+          const endCoords = {
+            latitude: endLocation.lat,
+            longitude: endLocation.lng,
+          };
+          setEndCoordinates(endCoords);
+
+          setCoordinates([startCoords, endCoords]);
+
+          // Calculate travel time
+          const directionsResponse = await fetch(
+            `https://maps.googleapis.com/maps/api/directions/json?origin=${encodeURIComponent(
+              startAddress
+            )}&destination=${encodeURIComponent(endAddress)}&key=AIzaSyCmU2tQ-70xFcJnqewgxA5sK0k3HHXxvy8`
+          );
+          const directionsData = await directionsResponse.json();
+
+          if (directionsData.status === 'OK') {
+            const duration = directionsData.routes[0].legs[0].duration.text;
+            setTravelTime(duration);
+          } else {
+            console.log('Error retrieving directions:', directionsData.status);
+            setTravelTime(null);
+          }
+        } else {
+          console.log('Error geocoding end address:', endData.status);
+          setEndCoordinates(null);
+          setCoordinates([]);
+          setTravelTime(null);
+        }
+      } else {
+        console.log('Error geocoding start address:', startData.status);
+        setStartCoordinates(null);
+        setEndCoordinates(null);
+        setCoordinates([]);
+        setTravelTime(null);
+      }
+    } catch (error) {
+      console.log('Error geocoding addresses:', error);
+      setStartCoordinates(null);
+      setEndCoordinates(null);
+      setCoordinates([]);
+      setTravelTime(null);
+    }
+  };
+
   return (
-      <View style={{ flex: 1 }}>
-        <MapView
-          style={{ flex: 1 }}
-          provider={MapView.PROVIDER_GOOGLE}
-          providerOptions={{
-            apiKey: "AIzaSyCmU2tQ-70xFcJnqewgxA5sK0k3HHXxvy8",
-          }}
-          
-          initialRegion={{
-            latitude: 48.87548552467971,
-            longitude: 2.410712894024804,
-          }}
-        >
-          <Marker
-            coordinate={{
-              latitude: 48.87548552467971,
-              longitude: 2.410712894024804,
-            }}
-            title="Marker"
-            description="Marker Description"
-          />
-        </MapView>
+    <View style={{ flex: 1 }}>
+      <View>
+        <TextInput
+          style={styles.input}
+          placeholder="Start Address"
+          value={startAddress}
+          onChangeText={handleStartAddressChange}
+        />
+
+        <TextInput
+          style={styles.input}
+          placeholder="End Address"
+          value={endAddress}
+          onChangeText={handleEndAddressChange}
+        />
+
+          <View style={styles.buttonContainerSolo}>
+          <TouchableOpacity style={styles.button} onPress={handleGeocode}>
+            <Text style={styles.buttonText}>Search</Text>
+          </TouchableOpacity>
+          </View>
+
+        {travelTime && (
+          <Text style={styles.travelTime}>
+            Travel Time: {travelTime}
+          </Text>
+        )}
       </View>
-    );
-  }
+      
+      <MapView
+        style={styles.map}
+        provider={MapView.PROVIDER_GOOGLE}
+        initialRegion={{
+          latitude: 48.87548552467971,
+          longitude: 2.410712894024804,
+          latitudeDelta: 0.05,
+          longitudeDelta: 0.05,
+        }}
+      >
+        {coordinates && (
+          <Polyline
+            coordinates={coordinates}
+            strokeColor="#FF0000"
+            strokeWidth={3}
+          />
+        )}
+
+        {startCoordinates && (
+          <Marker
+            coordinate={startCoordinates}
+            title="Start"
+            description={startAddress}
+          />
+        )}
+
+        {endCoordinates && (
+          <Marker
+            coordinate={endCoordinates}
+            title="End"
+            description={endAddress}
+          />
+        )}
+      </MapView>
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -196,12 +325,17 @@ const styles = StyleSheet.create({
     width: '100%',
   },
 
-  buttonContainerInscription: {
+  buttonContainerSolo: {
     flexDirection: 'row',
     justifyContent: 'center',
     width: '100%',
   }, 
 
+  buttonContainerSearch: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    width: '100%',
+  }, 
   button: {
     width: '48%',
     height: 48,
@@ -223,5 +357,13 @@ const styles = StyleSheet.create({
     color: 'red',
     fontSize: 16,
     marginBottom: 16,
+  },
+
+  travelTime: {
+    marginTop: 10,
+    textAlign: 'center',
+  },
+  map: {
+    flex: 1,
   },
 });
