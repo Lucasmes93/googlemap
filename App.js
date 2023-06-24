@@ -358,5 +358,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
     textAlign: 'center',
   },
-
+  map: {
+    flex: 1,
+  },
 });
